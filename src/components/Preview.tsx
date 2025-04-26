@@ -86,6 +86,18 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
     }
   };
 
+  // Calculate viewport dimensions
+  const viewportHeight = window.innerHeight - 200; // Account for header and padding
+  const a4AspectRatio = 297 / 210; // A4 height/width ratio
+  const a4Width = 210; // A4 width in mm
+  const a4Height = 297; // A4 height in mm
+  
+  // Calculate scale to fit in viewport while maintaining A4 proportions
+  const scale = Math.min(
+    viewportHeight / a4Height,
+    (window.innerWidth - 100) / a4Width
+  );
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
@@ -115,17 +127,20 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
         </div>
       </div>
       
-      <div className="mx-auto bg-gray-100 p-8 rounded-lg shadow-inner overflow-auto">
-        <div className="flex justify-center">
+      <div className="mx-auto bg-gray-100 p-8 rounded-lg shadow-inner overflow-hidden">
+        <div 
+          className="flex justify-center"
+          style={{
+            minHeight: `${a4Height * scale}px`,
+          }}
+        >
           <div
             ref={previewRef}
-            className="bg-white shadow-lg"
+            className="bg-white shadow-lg origin-top"
             style={{
-              width: '210mm',
-              height: '297mm',
-              maxWidth: '100%',
-              maxHeight: '80vh',
-              transform: 'scale(0.9)',
+              width: `${a4Width}mm`,
+              height: `${a4Height}mm`,
+              transform: `scale(${scale})`,
               transformOrigin: 'top center',
             }}
           >
