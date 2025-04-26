@@ -78,6 +78,7 @@ export const LineChart: React.FC<LineChartProps> = ({
       options: {
         responsive: true,
         maintainAspectRatio: true,
+        aspectRatio: 1.5,
         scales: {
           x: {
             display: true,
@@ -87,7 +88,7 @@ export const LineChart: React.FC<LineChartProps> = ({
             ticks: {
               color: '#6b7280',
               font: {
-                size: 10
+                size: 8
               }
             }
           },
@@ -101,7 +102,12 @@ export const LineChart: React.FC<LineChartProps> = ({
             ticks: {
               color: '#6b7280',
               font: {
-                size: 10
+                size: 8
+              },
+              callback: function(value) {
+                return value.toString().length > 4 ? 
+                  value.toString().slice(0, 4) + '...' : 
+                  value;
               }
             }
           }
@@ -111,15 +117,22 @@ export const LineChart: React.FC<LineChartProps> = ({
             display: false
           },
           tooltip: {
+            enabled: true,
             backgroundColor: 'rgba(255, 255, 255, 0.9)',
             titleColor: '#111827',
             bodyColor: '#111827',
             borderColor: '#e5e7eb',
             borderWidth: 1,
-            padding: 8,
-            boxPadding: 4,
+            padding: 6,
+            boxPadding: 3,
             usePointStyle: true,
-            caretSize: 5
+            caretSize: 5,
+            titleFont: {
+              size: 10
+            },
+            bodyFont: {
+              size: 10
+            }
           }
         }
       }
@@ -133,7 +146,7 @@ export const LineChart: React.FC<LineChartProps> = ({
   }, [historicalData, projectedData, colors]);
 
   return (
-    <div>
+    <div style={{ width: '100%', height: '100%' }}>
       <canvas ref={chartRef} />
     </div>
   );
