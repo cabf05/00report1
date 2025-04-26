@@ -1,8 +1,8 @@
 import React from 'react';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { CompanyData, Template } from '../types';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 // Import templates
 import GoldmanTeaserTemplate from './templates/GoldmanTeaserTemplate';
@@ -21,11 +21,12 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
   const previewRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [scale, setScale] = React.useState(1);
+  const [autoScale, setAutoScale] = React.useState(true);
 
   // Recalculate scale when window is resized
   React.useEffect(() => {
     const calculateScale = () => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || !autoScale) return;
 
       const containerWidth = containerRef.current.clientWidth - 64; // Account for padding
       const containerHeight = window.innerHeight - 200; // Account for header and padding
@@ -47,7 +48,21 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
     calculateScale();
     window.addEventListener('resize', calculateScale);
     return () => window.removeEventListener('resize', calculateScale);
-  }, []);
+  }, [autoScale]);
+
+  const handleZoomIn = () => {
+    setAutoScale(false);
+    setScale(prev => Math.min(prev + 0.1, 1));
+  };
+
+  const handleZoomOut = () => {
+    setAutoScale(false);
+    setScale(prev => Math.max(prev - 0.1, 0.3));
+  };
+
+  const handleResetZoom = () => {
+    setAutoScale(true);
+  };
 
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
@@ -130,7 +145,33 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
           Back to Editor
         </button>
         
-        <div className="flex space-x-3">
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 mr-4">
+            <button 
+              onClick={handleZoomOut}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+              title="Zoom Out"
+            >
+              <ZoomOut size={18} />
+            </button>
+            <span className="text-sm text-gray-600">
+              {Math.round(scale * 100)}%
+            </span>
+            <button 
+              onClick={handleZoomIn}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+              title="Zoom In"
+            >
+              <ZoomIn size={18} />
+            </button>
+            <button 
+              onClick={handleResetZoom}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+              title="Reset Zoom"
+            >
+              <RotateCcw size={18} />
+            </button>
+          </div>
           <button 
             onClick={handleExportPDF}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -150,7 +191,7 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
       
       <div 
         ref={containerRef}
-        className="mx-auto bg-gray-100 p-8 rounded-lg shadow-inner overflow-hidden"
+        className="mx-auto bg-gray-100 p-8 rounded-lg shadow-inner overflow-auto"
         style={{
           height: `calc(100vh - 200px)`,
         }}
@@ -174,7 +215,7 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
       </div>
       
       <div className="mt-6 text-center text-gray-600">
-        <p>This is a preview of how your document will look when printed or exported. The document is sized to fit an A4 page.</p>
+        <p>Use the zoom controls to adjust the preview size. The document will maintain A4 proportions when exported.</p>
       </div>
     </div>
   );
