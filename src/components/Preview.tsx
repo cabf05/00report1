@@ -19,6 +19,35 @@ interface PreviewProps {
 
 const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }) => {
   const previewRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [scale, setScale] = React.useState(1);
+
+  // Recalculate scale when window is resized
+  React.useEffect(() => {
+    const calculateScale = () => {
+      if (!containerRef.current) return;
+
+      const containerWidth = containerRef.current.clientWidth - 64; // Account for padding
+      const containerHeight = window.innerHeight - 200; // Account for header and padding
+
+      // A4 dimensions in mm
+      const a4Width = 210;
+      const a4Height = 297;
+
+      // Calculate scale to fit in viewport while maintaining A4 proportions
+      const newScale = Math.min(
+        containerWidth / a4Width,
+        containerHeight / a4Height,
+        1 // Never scale up, only down
+      );
+
+      setScale(newScale * 0.95); // Add a small margin for safety
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
+  }, []);
 
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
@@ -27,7 +56,9 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
       const canvas = await html2canvas(previewRef.current, {
         scale: 2,
         logging: false,
-        useCORS: true
+        useCORS: true,
+        windowWidth: 210 * 3.78, // Convert mm to pixels (96dpi)
+        windowHeight: 297 * 3.78
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -54,7 +85,9 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
       const canvas = await html2canvas(previewRef.current, {
         scale: 2,
         logging: false,
-        useCORS: true
+        useCORS: true,
+        windowWidth: 210 * 3.78, // Convert mm to pixels (96dpi)
+        windowHeight: 297 * 3.78
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -86,18 +119,6 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
     }
   };
 
-  // Calculate viewport dimensions
-  const viewportHeight = window.innerHeight - 200; // Account for header and padding
-  const a4AspectRatio = 297 / 210; // A4 height/width ratio
-  const a4Width = 210; // A4 width in mm
-  const a4Height = 297; // A4 height in mm
-  
-  // Calculate scale to fit in viewport while maintaining A4 proportions
-  const scale = Math.min(
-    viewportHeight / a4Height,
-    (window.innerWidth - 100) / a4Width
-  );
-
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
@@ -127,19 +148,22 @@ const Preview: React.FC<PreviewProps> = ({ template, companyData, onBackToEdit }
         </div>
       </div>
       
-      <div className="mx-auto bg-gray-100 p-8 rounded-lg shadow-inner overflow-hidden">
+      <div 
+        ref={containerRef}
+        className="mx-auto bg-gray-100 p-8 rounded-lg shadow-inner overflow-hidden"
+        style={{
+          height: `calc(100vh - 200px)`,
+        }}
+      >
         <div 
-          className="flex justify-center"
-          style={{
-            minHeight: `${a4Height * scale}px`,
-          }}
+          className="flex justify-center items-start h-full"
         >
           <div
             ref={previewRef}
-            className="bg-white shadow-lg origin-top"
+            className="bg-white shadow-lg"
             style={{
-              width: `${a4Width}mm`,
-              height: `${a4Height}mm`,
+              width: '210mm',
+              height: '297mm',
               transform: `scale(${scale})`,
               transformOrigin: 'top center',
             }}
